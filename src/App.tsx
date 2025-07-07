@@ -1,10 +1,16 @@
+
 import React, { lazy, Suspense } from 'react';
+
+import { initializeAuth } from './components/services/auth';
+
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout         from './components/layout/Layout';
 import PrivateRoute   from './components/PrivateRoute';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
 import { UserRole }   from './types/types';      
+
+initializeAuth();
 
 const Login             = lazy(() => import('./pages/Login'));
 const Dashboard         = lazy(() => import('./pages/Dashboard'));

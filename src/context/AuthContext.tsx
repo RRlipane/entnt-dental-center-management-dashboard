@@ -1,98 +1,90 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { User } from '../types/types';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from 'react';
+import type { User } from '../types/types';
 
-interface AuthContextType {
+/* ------------------------------------------------------------------ */
+/*  public API                                                         */
+/* ------------------------------------------------------------------ */
+interface AuthCtx {
   user: User | null;
-  isLoading: boolean;
-  login(email: string, password: string): Promise<{ user: User | null; error?: string }>;
+  loading: boolean;
+  login(email: string, pwd: string): Promise<string | null>; // returns error‑text or null
   logout(): void;
-  updateUser(updatedUser: User): void;
+  updateUser(u: User): void;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const AuthContext = createContext<AuthCtx>({} as AuthCtx);
+export const useAuth = () => useContext(AuthContext);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+/* ------------------------------------------------------------------ */
+/*  provider                                                           */
+/* ------------------------------------------------------------------ */
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [user, setUser]       = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  
+  /* 1️⃣  hydrate session once ------------------------------------- */
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const stored = localStorage.getItem('currentUser');
-        if (stored) {
-          const parsedUser = JSON.parse(stored);
-          
-          const users = JSON.parse(localStorage.getItem('users') || '[]');
-          const userExists = users.some((u: User) => u.id === parsedUser.id);
-          if (userExists) {
-            setUser(parsedUser);
-          } else {
-            localStorage.removeItem('currentUser');
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth state:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
+    const cached = localStorage.getItem('currentUser');
+    if (cached) setUser(JSON.parse(cached));
+    setLoading(false);
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const found = users.find((u: User) => u.email === email && u.password === password);
+  /* 2️⃣  login ----------------------------------------------------- */
+  const login = useCallback(
+    async (email: string, pwd: string): Promise<string | null> => {
+      setLoading(true);
+
+      const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
+      const found = users.find(
+        u =>
+          u.email.trim().toLowerCase() === email.trim().toLowerCase() &&
+          u.password === pwd,
+      );
 
       if (!found) {
-        return { user: null, error: 'Invalid email or password' };
+        setLoading(false);
+        return 'Invalid e‑mail or password';
       }
 
       localStorage.setItem('currentUser', JSON.stringify(found));
       setUser(found);
-      return { user: found };
-    } catch (error) {
-      console.error('Login failed:', error);
-      return { user: null, error: 'An error occurred during login' };
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      setLoading(false);
+      return null; // success
+    },
+    [],
+  );
 
+  /* 3️⃣  logout ---------------------------------------------------- */
   const logout = useCallback(() => {
     localStorage.removeItem('currentUser');
     setUser(null);
   }, []);
 
-  const updateUser = useCallback((updatedUser: User) => {
-    
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const updatedUsers = users.map((u: User) => 
-      u.id === updatedUser.id ? updatedUser : u
-    );
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    
-    
-    if (user?.id === updatedUser.id) {
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-      setUser(updatedUser);
-    }
-  }, [user]);
-
-  return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, updateUser }}>
-      {children}
-    </AuthContext.Provider>
+  /* 4️⃣  update user + keep session in sync ------------------------ */
+  const updateUser = useCallback(
+    (updated: User) => {
+      const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
+      localStorage.setItem(
+        'users',
+        JSON.stringify(users.map(u => (u.id === updated.id ? updated : u))),
+      );
+      if (user?.id === updated.id) {
+        localStorage.setItem('currentUser', JSON.stringify(updated));
+        setUser(updated);
+      }
+    },
+    [user],
   );
+
+  /* 5️⃣  context value -------------------------------------------- */
+  const value: AuthCtx = { user, loading, login, logout, updateUser };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
