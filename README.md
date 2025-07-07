@@ -1,46 +1,139 @@
-# Getting Started with Create React App
+# 🦷 ENTNT Dental Center Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, responsive dental center management system built with **React**, **TypeScript**, and **TailwindCSS**. This project enables role-based access for **Admin**, **Doctor**, and **Patient** with full functionality like appointment scheduling, patient profiles, and revenue tracking.
 
-## Available Scripts
 
-In the project directory, you can run:
+## 🚀 Project Setup
 
-### `npm start`
+### 🧰 Prerequisites
+- Node.js ≥ 18
+- pnpm (or npm/yarn)
+- Modern browser
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 📦 Installation
+bash
+npm install
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### 🔧 Run the Development Server
+bash
+pnpm dev
+```
 
-### `npm test`
+Then visit: <http://localhost:5173>
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🗂 Folder Structure & Architecture
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+dental-center-dashboard/
+│
+├── public/               # Static files (favicon, index.html)
+├── src/
+│   ├── assets/           # Images, logos, icons
+│   ├── components/       # Reusable UI components (Buttons, Cards, Inputs)
+│   ├── context/          # Global contexts (AuthContext, DataContext)
+│   ├── pages/            # Route pages (Dashboard, Appointments, Patients, Profile)
+│   ├── services/         # LocalStorage logic (auth.ts, storage.ts)
+│   ├── styles/           # Global Tailwind styles (globals.css)
+│   ├── types/            # TypeScript types and interfaces
+│   ├── utils/            # Helper utilities (formatters, validators)
+│   └── App.tsx           # Main route and layout config
+│
+├── tailwind.config.ts    # Tailwind config
+├── tsconfig.json         # TypeScript config
+├── vite.config.ts        # Vite dev server config
+└── README.md             # You're reading it!
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🔐 Role-Based Access Control (RBAC)
 
-### `npm run eject`
+| Role    | Access Features                                                                 |
+|---------|----------------------------------------------------------------------------------|
+| Admin   | Dashboard + Patients + Appointments + Calendar + Revenue Insights               |
+| Doctor  | Limited appointment views, profile access                                       |
+| Patient | **Only sees their profile** (My Profile tab only)                               |
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Navigation and routes are conditionally rendered based on the authenticated role.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+##  Data Layer: LocalStorage
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+- Appointments, Users, and Patients are stored in `localStorage`.
+- Utility wrappers for `getItem`, `setItem`, and `removeItem` live under `src/utils/storage.ts`.
 
-## Learn More
+localStorage.setItem("appointments", JSON.stringify(appointmentsArray));
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 📊 Dashboard Features (Admin Only)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Total Patients
+- Completed / Scheduled Appointments
+- Total Revenue (calculated from all appointment costs)
+- Monthly Revenue Chart (BarChart)
+- Status Distribution
+- Top Patients by Spending
+- Today’s and Upcoming Appointments
+
+> Revenue is dynamically computed based on appointment costs. Example: ₹80 + ₹150 = **₹230**
+
+
+## Responsive Design
+
+- Built mobile‑first using **TailwindCSS**
+- Fully responsive layout for:
+  - Small Screens (mobile)
+  - Tablets
+  - Desktop Dashboards
+- Scrollbars, dynamic font scaling, and animations handled in `globals.css`
+
+---
+
+## Technical Decisions
+
+| Area                  | Decision                                                         |
+|-----------------------|------------------------------------------------------------------|
+| UI Framework          | TailwindCSS — clean utility‑first responsive design             |
+| Component Library     | Custom‑built, minimal dependency UI                             |
+| State Management      | React Context (`AuthContext`, `DataContext`)                    |
+| Auth & Session        | Simulated login with localStorage, supports role and ID         |
+| Data Storage          | No backend; localStorage for users, patients, appointments      |
+| Charting              | `recharts` used for bar charts and visual stats                 |
+| Types                 | Centralised in `src/types/types.ts`                             |
+| Routing               | Role‑based routing with `react-router-dom` and guards           |
+
+---
+
+##  Known Issues
+
+- **No real authentication** — users can manipulate `localStorage` manually  
+- **No cross‑device persistence** (local only)  
+- File uploads are local blob URLs only  
+- No server or database — front‑end demo project  
+- Limited mobile testing on very old devices  
+
+
+## Future Improvements
+
+- Firebase / Express backend for persistence  
+- Search & filter in patient / appointment tables  
+- Form validation enhancements  
+- Dedicated Doctor vs Admin dashboards  
+- Cloud file uploads (Firebase Storage / Cloudinary)  
+
+## Default Login Credentials
+
+| Role    | Email                | Password   |
+|---------|----------------------|-----------|
+| Admin   | admin@entnt.com      | admin123  |
+| Doctor  | doctor@entnt.com     | doc123    |
+| Patient | patient1@entnt.com   | patient123|
+
+
+![Dashboard](public/screenshots/admin-dashboard.png)
+
+## 📄 License
+
+MIT — feel free to fork and learn!
