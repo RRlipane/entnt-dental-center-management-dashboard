@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 import LoadingSpinner   from '@/components/ui/LoadingSpinner';
 import ErrorBoundary    from '@/components/common/ErrorBoundary';
-import { Layout }       from '@/components/layout/Layout';   
+import  Layout        from '@/components/layout/Layout';   
 import PrivateRouteComp from '@/components/PrivateRoute';
 
 import { UserRole }     from '../types/types';

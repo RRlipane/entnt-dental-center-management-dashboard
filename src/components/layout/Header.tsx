@@ -2,192 +2,106 @@ import React from 'react';
 import {
   AppBar,
   Toolbar,
+  IconButton,
   Typography,
-  Button,
   Box,
   Avatar,
   Menu,
   MenuItem,
-  IconButton,
-  useTheme,
   Divider,
-  Badge
+  Badge,
+  useTheme,
 } from '@mui/material';
 import {
+  Menu  as MenuIcon,
   Logout,
   Notifications,
-  Menu as MenuIcon,
-  AccountCircle,
   AdminPanelSettings,
-  MedicalServices
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
-interface HeaderProps {
+interface Props {
   onToggleSidebar?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
-  const theme = useTheme();
-  const { user, logout } = useAuth();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [notificationsAnchorEl, setNotificationsAnchorEl] = React.useState<null | HTMLElement>(null);
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleNotificationsOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setNotificationsAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-    setNotificationsAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    handleClose();
-    logout();
-  };
-
-  
-  const notifications = [
-    { id: 1, text: 'New appointment scheduled for tomorrow', read: false },
-    { id: 2, text: 'Patient John Doe updated his profile', read: true },
-  ];
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+const Header: React.FC<Props> = ({ onToggleSidebar }) => {
+  const theme              = useTheme();
+  const { user, logout }   = useAuth();
+  const [anchor, setAnchor] = React.useState<null | HTMLElement>(null);
+  const [notifAnchor, setNotifAnchor] = React.useState<null | HTMLElement>(null);
 
   return (
     <AppBar
-      position="fixed"
+      elevation={0}
       sx={{
         zIndex: theme.zIndex.drawer + 1,
         bgcolor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        color  : theme.palette.text.primary,
+        borderBottom: `1px solid ${theme.palette.divider}`,
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
-        <Box display="flex" alignItems="center">
+        {/* left block ---------------------------------------------------- */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {/* visible only on < md -------------------------------------- */}
           {onToggleSidebar && (
             <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
+              sx={{ mr: 1, display: { md: 'none' } }}
               onClick={onToggleSidebar}
-              sx={{ mr: 2, display: { sm: 'none' } }}
+              edge="start"
+              aria-label="open navigation"
             >
               <MenuIcon />
             </IconButton>
           )}
-          
-          <Box display="flex" alignItems="center" mr={3}>
-            <MedicalServices sx={{ 
-              color: theme.palette.primary.main, 
-              fontSize: 32, 
-              mr: 1 
-            }} />
-            <Typography 
-              variant="h6" 
-              noWrap 
-              component="div"
-              sx={{
-                fontWeight: 700,
-                background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}
-            >
-              ENTNT Dental
-            </Typography>
-          </Box>
+
+          <Typography variant="h6" fontWeight={700}>
+            ENTNT&nbsp;Dental
+          </Typography>
         </Box>
 
-        <Box display="flex" alignItems="center">
-          <IconButton
-            size="large"
-            aria-label={`show ${unreadCount} new notifications`}
-            color="inherit"
-            onClick={handleNotificationsOpen}
-            sx={{ mr: 1 }}
-          >
-            <Badge badgeContent={unreadCount} color="error">
+        {/* right block --------------------------------------------------- */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <IconButton onClick={e => setNotifAnchor(e.currentTarget)}>
+            <Badge badgeContent={2} color="error">
               <Notifications />
             </Badge>
           </IconButton>
-          
+
+          {/* fake notifications pop‑up */}
           <Menu
-            anchorEl={notificationsAnchorEl}
-            open={Boolean(notificationsAnchorEl)}
-            onClose={handleClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            open={Boolean(notifAnchor)}
+            anchorEl={notifAnchor}
+            onClose={() => setNotifAnchor(null)}
           >
-            <Typography variant="subtitle2" sx={{ px: 2, py: 1 }}>
-              Notifications
-            </Typography>
-            <Divider />
-            {notifications.length > 0 ? (
-              notifications.map((notification) => (
-                <MenuItem 
-                  key={notification.id} 
-                  dense
-                  sx={{ 
-                    bgcolor: notification.read ? 'inherit' : 'action.selected',
-                    maxWidth: 300,
-                    whiteSpace: 'normal'
-                  }}
-                >
-                  <Typography variant="body2">
-                    {notification.text}
-                  </Typography>
-                </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled>
-                <Typography variant="body2" color="text.secondary">
-                  No new notifications
-                </Typography>
-              </MenuItem>
-            )}
+            <MenuItem dense>New appointment scheduled</MenuItem>
+            <MenuItem dense>Patient profile updated</MenuItem>
           </Menu>
 
-          <Button
-            startIcon={<Avatar sx={{ width: 24, height: 24 }}>
-              {user?.email?.charAt(0).toUpperCase()}
-            </Avatar>}
-            endIcon={user?.role === 'Admin' ? <AdminPanelSettings fontSize="small" /> : undefined}
-            color="inherit"
-            onClick={handleMenuOpen}
-            sx={{ textTransform: 'none', ml: 1 }}
+          <IconButton
+            onClick={e => setAnchor(e.currentTarget)}
+            sx={{ ml: 1 }}
           >
-            <Box textAlign="left">
-              <Typography variant="subtitle2" lineHeight={1}>
-                {user?.email}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {user?.role}
-              </Typography>
-            </Box>
-          </Button>
+            <Avatar sx={{ width: 32, height: 32 }}>
+              {user?.email?.[0]?.toUpperCase()}
+            </Avatar>
+          </IconButton>
 
           <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            open={Boolean(anchor)}
+            anchorEl={anchor}
+            onClose={() => setAnchor(null)}
           >
-            <MenuItem dense disabled>
-              <AccountCircle sx={{ mr: 1 }} />
-              <Typography variant="body2">My Profile</Typography>
+            <MenuItem disabled dense>
+              {user?.role === 'Admin' && (
+                <AdminPanelSettings fontSize="small" sx={{ mr: 1 }} />
+              )}
+              {user?.email}
             </MenuItem>
             <Divider />
-            <MenuItem onClick={handleLogout} dense>
-              <Logout sx={{ mr: 1 }} />
-              <Typography variant="body2">Logout</Typography>
+            <MenuItem dense onClick={logout}>
+              <Logout fontSize="small" sx={{ mr: 1 }} />
+              Logout
             </MenuItem>
           </Menu>
         </Box>

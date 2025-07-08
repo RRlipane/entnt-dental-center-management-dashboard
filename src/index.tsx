@@ -8,7 +8,6 @@ import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import './index.css';
 
-
 // Initialize auth service
 const initializeAuth = () => {
   console.log('Auth initialized');

@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import {
-  Box,
+  Drawer,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Typography,
   Collapse,
-  useTheme,
-  styled
+  Divider,
+  Toolbar,
+  Box,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -19,103 +17,75 @@ import {
   CalendarToday as AppointmentsIcon,
   CalendarMonth as CalendarIcon,
   AccountCircle as ProfileIcon,
-  ExitToApp as LogoutIcon,
+  Logout as LogoutIcon,
   ExpandLess,
   ExpandMore,
-  MedicalServices,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 
-const SidebarLink = styled(NavLink)(({ theme }) => ({
-  textDecoration: 'none',
-  color: theme.palette.text.primary,
-  '&.active': {
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText,
-    '& .MuiListItemIcon-root': {
-      color: theme.palette.primary.contrastText,
-    },
-  },
-  '&:hover:not(.active)': {
-    backgroundColor: theme.palette.action.hover,
-  },
-}));
+import { useAuth } from '../../context/AuthContext';
 
-const Sidebar: React.FC = () => {
-  const theme = useTheme();
+interface Props {
+  mobileOpen: boolean;
+  onCloseMobile: () => void;
+  drawerWidth: number;
+}
+
+const Sidebar: React.FC<Props> = ({ mobileOpen, onCloseMobile, drawerWidth }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [openAdminMenu, setOpenAdminMenu] = useState(true);
-  const [openPatientMenu, setOpenPatientMenu] = useState(true);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const [openAdmin, setOpenAdmin] = useState(true);
+  const [openPatient, setOpenPatient] = useState(true);
 
-  const adminMenuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Patients', icon: <PatientsIcon />, path: '/patients' },
-    { text: 'Appointments', icon: <AppointmentsIcon />, path: '/appointments' },
-    { text: 'Calendar', icon: <CalendarIcon />, path: '/calendar' },
+  const adminLinks = [
+    { text: 'Dashboard', icon: <DashboardIcon />, to: '/' },
+    { text: 'Patients', icon: <PatientsIcon />, to: '/patients' },
+    { text: 'Appointments', icon: <AppointmentsIcon />, to: '/appointments' },
+    { text: 'Calendar', icon: <CalendarIcon />, to: '/calendar' },
   ];
 
-  const patientMenuItems = [
-    { text: 'My Profile', icon: <ProfileIcon />, path: '/my-profile' },
-    { text: 'My Appointments', icon: <CalendarIcon />, path: '/my-appointments' },
+  const patientLinks = [
+    { text: 'My Profile', icon: <ProfileIcon />, to: '/my-profile' },
+    { text: 'My Appointments', icon: <CalendarIcon />, to: '/my-appointments' },
   ];
 
-  return (
-    <Box
-      sx={{
-        width: 240,
-        height: '100vh',
-        bgcolor: theme.palette.background.paper,
-        display: 'flex',
-        flexDirection: 'column',
-        borderRight: `1px solid ${theme.palette.divider}`,
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          px: 2,
-          py: 2,
-          gap: 1,
-          borderBottom: `1px solid ${theme.palette.divider}`,
-        }}
+  const renderLinks = (items: typeof adminLinks) =>
+    items.map(({ text, icon, to }) => (
+      <NavLink
+        key={text}
+        to={to}
+        style={{ textDecoration: 'none', color: 'inherit' }}
       >
-        <MedicalServices sx={{ 
-          color: theme.palette.primary.main,
-          fontSize: 32
-        }} />
-        <Typography variant="h6" noWrap>
-          ENTNT Dental
-        </Typography>
-      </Box>
+        {({ isActive }) => (
+          <ListItemButton
+            sx={{ pl: 4 }}
+            selected={isActive}
+            onClick={onCloseMobile}
+          >
+            <ListItemIcon sx={{ color: isActive ? 'primary.main' : 'inherit' }}>
+              {icon}
+            </ListItemIcon>
+            <ListItemText primary={text} />
+          </ListItemButton>
+        )}
+      </NavLink>
+    ));
 
-      <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+  const DrawerContent = (
+    <Fragment>
+      <Toolbar />
+      <Divider />
+      <List disablePadding sx={{ pt: 0 }}>
         {user?.role === 'Admin' && (
           <>
-            <ListItemButton onClick={() => setOpenAdminMenu(!openAdminMenu)}>
-              <ListItemIcon>
-                <DashboardIcon />
-              </ListItemIcon>
+            <ListItemButton onClick={() => setOpenAdmin(!openAdmin)}>
+              <ListItemIcon><DashboardIcon /></ListItemIcon>
               <ListItemText primary="Admin" />
-              {openAdminMenu ? <ExpandLess /> : <ExpandMore />}
+              {openAdmin ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
-            <Collapse in={openAdminMenu} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                {adminMenuItems.map((item) => (
-                  <SidebarLink key={item.text} to={item.path}>
-                    <ListItemButton sx={{ pl: 4 }}>
-                      <ListItemIcon>{item.icon}</ListItemIcon>
-                      <ListItemText primary={item.text} />
-                    </ListItemButton>
-                  </SidebarLink>
-                ))}
-              </List>
+            <Collapse in={openAdmin} timeout="auto" unmountOnExit>
+              {renderLinks(adminLinks)}
             </Collapse>
             <Divider />
           </>
@@ -123,48 +93,77 @@ const Sidebar: React.FC = () => {
 
         {user?.role === 'Patient' && (
           <>
-            <ListItemButton onClick={() => setOpenPatientMenu(!openPatientMenu)}>
-              <ListItemIcon>
-                <ProfileIcon />
-              </ListItemIcon>
+            <ListItemButton onClick={() => setOpenPatient(!openPatient)}>
+              <ListItemIcon><ProfileIcon /></ListItemIcon>
               <ListItemText primary="Patient" />
-              {openPatientMenu ? <ExpandLess /> : <ExpandMore />}
+              {openPatient ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
-            <Collapse in={openPatientMenu} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                {patientMenuItems.map((item) => (
-                  <SidebarLink key={item.text} to={item.path}>
-                    <ListItemButton sx={{ pl: 4 }}>
-                      <ListItemIcon>{item.icon}</ListItemIcon>
-                      <ListItemText primary={item.text} />
-                    </ListItemButton>
-                  </SidebarLink>
-                ))}
-              </List>
+            <Collapse in={openPatient} timeout="auto" unmountOnExit>
+              {renderLinks(patientLinks)}
             </Collapse>
             <Divider />
           </>
         )}
 
-        <SidebarLink to="/settings">
-          <ListItemButton>
-            <ListItemIcon>
-              <SettingsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Settings" />
-          </ListItemButton>
-        </SidebarLink>
-      </Box>
+        <NavLink to="/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
+          {({ isActive }) => (
+            <ListItemButton selected={isActive} sx={{ pl: 4 }}>
+              <ListItemIcon sx={{ color: isActive ? 'primary.main' : 'inherit' }}>
+                <SettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Settings" />
+            </ListItemButton>
+          )}
+        </NavLink>
+      </List>
 
-      <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-        <ListItemButton onClick={handleLogout}>
-          <ListItemIcon>
-            <LogoutIcon color="error" />
-          </ListItemIcon>
-          <ListItemText primary="Logout" primaryTypographyProps={{ color: 'error' }} />
-        </ListItemButton>
-      </Box>
-    </Box>
+      <Box sx={{ flexGrow: 1 }} />
+
+      <ListItemButton
+        onClick={() => {
+          logout();
+          navigate('/login');
+        }}
+      >
+        <ListItemIcon><LogoutIcon color="error" /></ListItemIcon>
+        <ListItemText primary="Logout" primaryTypographyProps={{ color: 'error' }} />
+      </ListItemButton>
+    </Fragment>
+  );
+
+  return (
+    <>
+      {/* Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onCloseMobile}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { width: drawerWidth },
+        }}
+      >
+        {DrawerContent}
+      </Drawer>
+
+      {/* Desktop Drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+          },
+        }}
+        open
+      >
+        {DrawerContent}
+      </Drawer>
+    </>
   );
 };
 
